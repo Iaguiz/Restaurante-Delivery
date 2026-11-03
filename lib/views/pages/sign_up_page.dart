@@ -25,6 +25,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   bool _obscurePassword = true;
   bool _acceptedTerms = false;
+  bool _isLoading = false;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -154,8 +155,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Widget _buildSubmitButton() {
     return ElevatedButton(
       onPressed: () {
-        final isValid = _formKey.currentState!.validate();
-        print('Formulário válido? $isValid');
+        _isLoading ? null : _submit();
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: SignUpPage._ifoodRed,
@@ -163,10 +163,17 @@ class _SignUpPageState extends State<SignUpPage> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
       ),
-      child: const Text(
-        'Criar conta',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      child: _isLoading 
+        ? const SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
       )
+        : const Text(
+          'Criar conta',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        )
+      
     );
   }
 
@@ -193,5 +200,48 @@ class _SignUpPageState extends State<SignUpPage> {
       style: TextButton.styleFrom(foregroundColor: SignUpPage._ifoodRed),
       child: const Text('Já tenho uma conta')
     );
+  }
+
+  Future<void> _submit() async {
+    final isValid = _formKey.currentState!.validate();
+    if(!isValid)
+      return;
+
+    if(!_acceptedTerms){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Aceite os termos de uso para continuar'))
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final error = await _viewModel.register(
+      name: _nameController.text,
+      email: _emailController.text,
+      phone: _phoneController.text,
+      password: _passwordController.text
+    );
+
+    if(!mounted)
+      return;
+    
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error))
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Conta criada! Boas-vindas, ${_nameController.text.trim()}.'))
+    );
+    Navigator.pop(context);
   }
 }
