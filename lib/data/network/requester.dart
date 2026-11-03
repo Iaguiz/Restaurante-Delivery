@@ -18,7 +18,6 @@ class Requester {
     } on DioException catch (e) {
       throw RequestException(_messageFor(e));
     }
-    await Future.delayed(const Duration(seconds: 2));
   }
 
   String _messageFor(DioException e) {

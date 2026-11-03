@@ -68,7 +68,5 @@ class SignUpViewmodel {
     } catch (_) {
       return 'Não foi possivel criar a conta. Tente novamente.';
     }
-
-    return null;
   }
 }
